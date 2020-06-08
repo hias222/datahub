@@ -4,6 +4,7 @@ import { ParamsDictionary } from 'express-serve-static-core';
 
 import HeatDao from '@daos/Heat/HeatDao';
 import { paramMissingError } from '@shared/constants';
+import logger from 'src/shared/Logger';
 
 // Init shared
 const router = Router();
@@ -14,6 +15,7 @@ const heatDao = new HeatDao();
  ******************************************************************************/
 
 router.get('/all', async (req: Request, res: Response) => {
+    logger.info('---all');
     const heat = await heatDao.getAll();
     return res.status(OK).json({heat});
 });
@@ -24,14 +26,14 @@ router.get('/all', async (req: Request, res: Response) => {
  ******************************************************************************/
 
 router.post('/add', async (req: Request, res: Response) => {
-    const { user } = req.body;
-    if (!user) {
+    const heatdata  = req.body;
+    if (!heatdata) {
         return res.status(BAD_REQUEST).json({
             error: paramMissingError,
         });
     }
-    await heatDao.add(user);
-    return res.status(CREATED).end();
+    await heatDao.add(heatdata);
+    return res.status(CREATED).json({'add': 'heat'});
 });
 
 
