@@ -32,8 +32,16 @@ router.post('/add', async (req: Request, res: Response) => {
             error: paramMissingError,
         });
     }
-    await heatDao.add(heatdata);
-    return res.status(CREATED).json({'add': 'heat'});
+    heatDao.add(heatdata)
+    .then(
+        answer => {
+            return res.status(CREATED).json({'added': answer});
+        })
+    .catch(
+        answer => {
+            return res.status(BAD_REQUEST).json(answer);
+        }
+    )
 });
 
 

@@ -6,13 +6,16 @@ import logger from '../../shared/Logger';
 
 const client = new Client({
     contactPoints: ['127.0.0.1'],
-    localDataCenter: 'datacenter1'
+    localDataCenter: 'datacenter1',
+    keyspace: 'colorado'
 });
+
+const insertheatquery = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
     getAll: () => Promise<IHeat[]>;
-    add: (user: IHeat) => Promise<void>;
+    add: (user: IHeat) => Promise<string>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
 }
@@ -20,7 +23,7 @@ export interface IHeatDao {
 class HeatDao implements IHeatDao {
 
     constructor() {
-         client.connect();
+        client.connect();
     }
 
     /**
@@ -52,12 +55,22 @@ class HeatDao implements IHeatDao {
      *
      * @param user
      */
-    public async add(heatdata: IHeat): Promise<void> {
-        // TODO
-        // logger.info(JSON.stringify(heatdata))
-        const logg = 'e: ' + heatdata.event + ' h: ' + heatdata.heat
-        logger.info(logg.toString());
-        return {} as any;
+    public async add(heatdata: IHeat): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const logg = 'e: ' + heatdata.event + ' h: ' + heatdata.heat
+            logger.info(logg.toString());
+
+            const params = [heatdata];
+            client.execute(insertheatquery, params, { prepare: true })
+            .then(result => {
+                Logger.info('success')
+                resolve('done')
+            })
+            .catch(reason => {
+                Logger.info(reason)
+                reject(reason)
+            })
+        })
     }
 
 
