@@ -34,7 +34,7 @@ router.post('/add', async (req: Request, res: Response) => {
     heatDao.add(heatdata)
     .then(
         answer => {
-            return res.status(CREATED).json({'added': answer});
+            return res.status(CREATED).json(answer);
         })
     .catch(
         answer => {

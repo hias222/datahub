@@ -8,6 +8,6 @@ entrytime varchar, name varchar,
       type varchar,
       event varchar,
       place varchar,
-      dtime varchar, 
+      finishtime varchar, 
       heat varchar
        );

@@ -1,4 +1,4 @@
-INSERT INTO colorado.heatdata (event_heat_id, creation_date, lane_data)
+INSERT INTO colorado.heatdata (heatid, creation_date, lanes)
            VALUES (11, toTimeStamp(now())
                       , [{
       athleteid: '123',
