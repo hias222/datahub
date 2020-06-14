@@ -14,13 +14,13 @@ class CassandraResponse implements ICassandraResponse {
         this.uuid = uuid
     }
 
-    errorMessage(reason: any){
+    async errorMessage(reason: any){
         this.error = reason;
         this.answer = 'failure';
         return this;
     }
 
-    successMessage(){
+    async successMessage(){
         this.answer = 'success';
         return this;
     }

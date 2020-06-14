@@ -12,9 +12,15 @@ const client = new Client({
     keyspace: 'colorado'
 });
 
+const wkid = 1;
 const insertheatquery = 'INSERT INTO colorado.heatdata \
 (heatid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
     VALUES (?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
+
+
+const insertheatid = 'INSERT INTO colorado.heatids \
+    (wkid,creation_date, heatID ) \
+        VALUES (?,toTimeStamp(now()), ?)';
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
@@ -69,8 +75,14 @@ class HeatDao implements IHeatDao {
             logger.info(JSON.stringify(heatdata.lanes));
 
             const params = [Uuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
+            const params2 = [wkid, Uuid]
+
             client.execute(insertheatquery, params, { prepare: true })
+                .then()
                 .then(result => {
+                    client.execute(insertheatid, params2, { prepare: true })
+                })
+                .then (result => {
                     resolve(resp.successMessage())
                 })
                 .catch(reason => {
