@@ -25,6 +25,17 @@ VALUES (123, 'Greenville Hardware',
  [{ id: 5544, time: 'hello'},
   { id: 6666, item: 'wire'}]) ;
 
+
+INSERT INTO colorado.heatdata (event_heat_id, creation_date, lane_data)
+           VALUES ('11', toTimeStamp(toDate(now())),
+           [{
+      athleteid: 123,
+      birthdate: '2013-01-01',
+      firstname: 'Henri',
+      lastname: 'Wittl'
+    }]
+    );
+
 INSERT INTO colorado.heat (id, name, lanedata) 
 VALUES (123, 'Greenville Hardware',
  { id: 5544, item: 'tape'});

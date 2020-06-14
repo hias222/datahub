@@ -10,7 +10,7 @@ const client = new Client({
     keyspace: 'colorado'
 });
 
-const insertheatquery = 'INSERT INTO users (key, name, email, birthdate) VALUES (?, ?, ?)';
+const insertheatquery = 'INSERT INTO colorado.heatdata (event_heat_id, creation_date, lanes) VALUES (?, toTimeStamp(now()), ?)';
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
@@ -41,13 +41,15 @@ class HeatDao implements IHeatDao {
     public async getAll(): Promise<IHeat[]> {
         // TODO
         // await client.connect();
-        const rs = await client.execute('SELECT * FROM system.local');
+        const rs = await client.execute('SELECT * FROM colorado.heatdata');
         const row = rs.first();
-        const rowname = row.get('cluster_name');
-        Logger.info(`Connected to cluster: ${rowname}`)
+        const heatID = row.get('event_heat_id');
+        const lanes = row.get('lanes');
+
+        Logger.info(`Lane data: ${heatID} ${lanes}`)
 
         // await client.shutdown();
-        return [] as any;
+        return {heatID, lanes} as any;
     }
 
 
@@ -59,8 +61,9 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
             const logg = 'e: ' + heatdata.event + ' h: ' + heatdata.heat
             logger.info(logg.toString());
+            logger.info(JSON.stringify(heatdata.lanes));
 
-            const params = [heatdata];
+            const params = [heatdata.event+heatdata.heat, heatdata.lanes];
             client.execute(insertheatquery, params, { prepare: true })
             .then(result => {
                 Logger.info('success')

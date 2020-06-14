@@ -15,7 +15,6 @@ const heatDao = new HeatDao();
  ******************************************************************************/
 
 router.get('/all', async (req: Request, res: Response) => {
-    logger.info('---all');
     const heat = await heatDao.getAll();
     return res.status(OK).json({heat});
 });

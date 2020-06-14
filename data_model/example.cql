@@ -20,6 +20,8 @@ use json;
 
 CREATE type json.sale ( id int, item text, amount int );
 
+CREATE TABLE user_videos ( userid uuid, added_date timestamp, videoid uuid, name text, preview_image_location text, PRIMARY KEY (userid, added_date, videoid) ) WITH CLUSTERING ORDER BY (added_date DESC, videoid ASC);
+
 CREATE TABLE json.customers ( id int  PRIMARY KEY, name text, balance int, sales list> );
 
 INSERT INTO json.customers (id, name, balance, sales) 

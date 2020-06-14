@@ -1,8 +1,18 @@
+export interface ILane {
+    athleteid: string,
+    birthdate?: string,
+    firstname?: string,
+    lastname?: string,
+}
+
+
 export interface IHeat {
     event: number;
     heat: number;
     swimstyle: string;
     name?: string;
+    competition?: string,
+    lanes?: [ILane]
 }
 
 class Heat implements IHeat {
