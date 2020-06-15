@@ -1,10 +1,10 @@
 import { IHeat } from '../../entities/Heat';
-import CassandraResponse, { ICassandraResponse } from '../../entities/CassandraResponse';
 import { Client, types } from 'cassandra-driver';
 
 import Logger from '../../shared/Logger';
 import logger from '../../shared/Logger';
 import { response } from 'express';
+import { resolve } from 'dns';
 
 const client = new Client({
     contactPoints: ['127.0.0.1'],
@@ -13,19 +13,29 @@ const client = new Client({
 });
 
 const wkid = 1;
-const insertheatquery = 'INSERT INTO colorado.heatdata \
-(heatid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
-    VALUES (?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
 
+const insertheatquery = 'INSERT INTO colorado.heatdata \
+(heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
+    VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
 
 const insertheatid = 'INSERT INTO colorado.heatids \
     (wkid,creation_date, heatID ) \
         VALUES (?,toTimeStamp(now()), ?)';
 
+const updateheatid = 'UPDATE colorado.heatdata \
+        SET \
+	    nextid= ? \
+        WHERE heatid=?';
+
+const selectlastheatid = 'SELECT heatid, creation_date, wkid \
+        FROM colorado.heatids \
+        where wkid= ? \
+        LIMIT 10';
+
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
     getAll: () => Promise<IHeat[]>;
-    add: (user: IHeat) => Promise<ICassandraResponse>;
+    add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
 }
@@ -65,30 +75,69 @@ class HeatDao implements IHeatDao {
      *
      * @param user
      */
-    public async add(heatdata: IHeat): Promise<ICassandraResponse> {
+    public async add(heatdata: IHeat): Promise<any> {
         return new Promise((resolve, reject) => {
             const Uuid = types.Uuid.random();
-            const resp = new CassandraResponse(Uuid.toString());
+            let lastUuid: types.Uuid;
             const logg = Uuid + ' e: ' + heatdata.event * 100 + ' h: ' + heatdata.heat
-
             logger.info(logg.toString());
-            logger.info(JSON.stringify(heatdata.lanes));
 
-            const params = [Uuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
             const params2 = [wkid, Uuid]
 
-            client.execute(insertheatquery, params, { prepare: true })
-                .then()
+            this.getLastID()
                 .then(result => {
-                    client.execute(insertheatid, params2, { prepare: true })
+                    lastUuid = result;
+                    return this.insertNewHeatID(heatdata, Uuid, result)
                 })
-                .then (result => {
-                    resolve(resp.successMessage())
+                .then(() => client.execute(insertheatid, params2, { prepare: true }))
+                .then(() => this.updateLastHeatID(lastUuid, Uuid))
+                .then(() => resolve({ 'uuid': Uuid }))
+                .catch(reason => reject({ 'uuid': Uuid, 'reason': reason }))
+        })
+    }
+
+    private async getLastID(): Promise<types.Uuid> {
+        const params = [wkid]
+        return new Promise((resolve, reject) => {
+
+            client.execute(selectlastheatid, params, { prepare: true })
+                .then(rs => {
+                    const row = rs.first();
+                    const heatid = row.get(0);
+                    return resolve(heatid)
                 })
                 .catch(reason => {
-                    Logger.info(reason)
-                    reject(resp.errorMessage(reason))
+                    return reject(reason.toString())
                 })
+
+        })
+    }
+
+    private async insertNewHeatID(heatdata: IHeat, newUuid: types.Uuid, lastUuid: string | types.Uuid): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
+            client.execute(insertheatquery, params, { prepare: true })
+                .then(rs => {
+                    resolve()
+                })
+                .catch(reason => {
+                    reject(reason.toString())
+                })
+
+        })
+    }
+
+    private async updateLastHeatID(updateUuid: types.Uuid, nextUuid: types.Uuid): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const params = [nextUuid, updateUuid];
+            client.execute(updateheatid, params, { prepare: true })
+                .then(rs => {
+                    resolve()
+                })
+                .catch(reason => {
+                    reject(reason.toString())
+                })
+
         })
     }
 

@@ -38,6 +38,7 @@ router.post('/add', async (req: Request, res: Response) => {
         })
     .catch(
         answer => {
+            logger.info(JSON.stringify(answer))
             return res.status(BAD_REQUEST).json(answer);
         }
     )
