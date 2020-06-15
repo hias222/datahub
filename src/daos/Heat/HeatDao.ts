@@ -79,7 +79,7 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
             const Uuid = types.Uuid.random();
             let lastUuid: types.Uuid;
-            const logg = Uuid + ' e: ' + heatdata.event * 100 + ' h: ' + heatdata.heat
+            const logg = Uuid + ' e: ' + heatdata.event + ' h: ' + heatdata.heat
             logger.info(logg.toString());
 
             const params2 = [wkid, Uuid]
