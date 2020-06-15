@@ -65,9 +65,10 @@ class HeatDao implements IHeatDao {
         const row = rs.first();
         // const heatID = row.get('event_heat_id');
         const heatdata = row.get(0);
+        const jsondata = JSON.parse(heatdata)
         // Logger.info(`Lane data: ${lanes}`)
         // await client.shutdown();
-        return { heatdata } as any;
+        return jsondata as any;
     }
 
 

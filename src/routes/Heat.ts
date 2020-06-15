@@ -16,7 +16,7 @@ const heatDao = new HeatDao();
 
 router.get('/all', async (req: Request, res: Response) => {
     const heat = await heatDao.getAll();
-    return res.status(OK).json({heat});
+    return res.status(OK).json(heat);
 });
 
 

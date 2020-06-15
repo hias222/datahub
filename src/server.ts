@@ -10,9 +10,15 @@ import 'express-async-errors';
 import BaseRouter from './routes';
 import logger from '@shared/Logger';
 
+import cors from 'cors';
+
 
 // Init express
 const app = express();
+
+// allow from all cors
+app.use(cors());
+app.options('*', cors());
 
 /************************************************************************************
  *                              Set basic express settings
@@ -35,6 +41,7 @@ if (process.env.NODE_ENV === 'production') {
 // Add APIs
 app.use('/api', BaseRouter);
 
+
 // Print API errors
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error(err.message, err);
@@ -42,7 +49,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         error: err.message,
     });
 });
-
 
 
 /************************************************************************************
@@ -56,6 +62,7 @@ app.use(express.static(staticDir));
 app.get('*', (req: Request, res: Response) => {
     res.sendFile('index.html', {root: viewsDir});
 });
+
 
 // Export express instance
 export default app;
