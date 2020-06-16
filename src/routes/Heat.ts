@@ -25,23 +25,23 @@ router.get('/all', async (req: Request, res: Response) => {
  ******************************************************************************/
 
 router.post('/add', async (req: Request, res: Response) => {
-    const heatdata  = req.body;
+    const heatdata = req.body;
     if (!heatdata) {
         return res.status(BAD_REQUEST).json({
             error: paramMissingError,
         });
     }
     heatDao.add(heatdata)
-    .then(
-        answer => {
-            return res.status(CREATED).json(answer);
-        })
-    .catch(
-        answer => {
-            logger.info(JSON.stringify(answer))
-            return res.status(BAD_REQUEST).json(answer);
-        }
-    )
+        .then(
+            answer => {
+                return res.status(CREATED).json(answer);
+            })
+        .catch(
+            answer => {
+                logger.info(JSON.stringify(answer))
+                return res.status(BAD_REQUEST).json(answer);
+            }
+        )
 });
 
 
@@ -70,6 +70,21 @@ router.delete('/delete/:id', async (req: Request, res: Response) => {
     const { id } = req.params as ParamsDictionary;
     await heatDao.delete(Number(id));
     return res.status(OK).end();
+});
+
+
+/******************************************************************************
+ *                    Delete - "DELETE /api/heat/delete/:id"
+ ******************************************************************************/
+
+router.get('/search/:id', async (req: Request, res: Response) => {
+    const { id } = req.params as ParamsDictionary;
+    const heat = await heatDao.search(id)
+    .catch(() => res.status(404))
+
+    logger.info(heat)
+
+    return res.status(OK).json(heat)
 });
 
 

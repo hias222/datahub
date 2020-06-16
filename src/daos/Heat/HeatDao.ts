@@ -3,8 +3,6 @@ import { Client, types } from 'cassandra-driver';
 
 import Logger from '../../shared/Logger';
 import logger from '../../shared/Logger';
-import { response } from 'express';
-import { resolve } from 'dns';
 
 const client = new Client({
     contactPoints: ['127.0.0.1'],
@@ -32,9 +30,12 @@ const selectlastheatid = 'SELECT heatid, creation_date, wkid \
         where wkid= ? \
         LIMIT 10';
 
+const searchHeatId = 'SELECT JSON * FROM colorado.heatdata where heatid = ?'
+
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
     getAll: () => Promise<IHeat[]>;
+    search: (id: string) => Promise<IHeat[]>;
     add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
@@ -67,6 +68,25 @@ class HeatDao implements IHeatDao {
         const heatdata = row.get(0);
         const jsondata = JSON.parse(heatdata)
         // Logger.info(`Lane data: ${lanes}`)
+        // await client.shutdown();
+        return jsondata as any;
+    }
+
+    /**
+     *
+     */
+    public async search(id: string): Promise<IHeat[]> {
+        // await client.connect();
+        Logger.info('search Lane data: ' + id)
+        const params = [id]
+        const rs = await client.execute(searchHeatId, params, { prepare: true });
+        const row = rs.first();
+        // const heatID = row.get('event_heat_id');
+        
+        const heatdata = row.get(0);
+        // logger.info(heatdata)
+        const jsondata = JSON.parse(heatdata)
+        // logger.info(jsondata)
         // await client.shutdown();
         return jsondata as any;
     }
