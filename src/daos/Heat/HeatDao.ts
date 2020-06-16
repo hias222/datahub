@@ -82,7 +82,6 @@ class HeatDao implements IHeatDao {
             const params = [id]
             client.execute(searchHeatId, params, { prepare: true })
                 .then(rs => {
-
                     if (rs.rowLength === 0) {
                         logger.error('no rows')
                         return reject({ 'error': 'no data' })

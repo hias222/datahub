@@ -79,9 +79,9 @@ router.delete('/delete/:id', async (req: Request, res: Response) => {
 
 router.get('/search/:id', async (req: Request, res: Response) => {
     const { id } = req.params as ParamsDictionary;
-    const heat = await heatDao.search(id)
+    heatDao.search(id)
+        .then(heat => res.status(OK).json(heat))
         .catch((reason) => res.status(404).json(reason))
-    return res.status(OK).json(heat)
 });
 
 
