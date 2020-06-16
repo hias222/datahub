@@ -77,18 +77,24 @@ class HeatDao implements IHeatDao {
      */
     public async search(id: string): Promise<IHeat[]> {
         // await client.connect();
-        Logger.info('search Lane data: ' + id)
-        const params = [id]
-        const rs = await client.execute(searchHeatId, params, { prepare: true });
-        const row = rs.first();
-        // const heatID = row.get('event_heat_id');
-        
-        const heatdata = row.get(0);
-        // logger.info(heatdata)
-        const jsondata = JSON.parse(heatdata)
-        // logger.info(jsondata)
-        // await client.shutdown();
-        return jsondata as any;
+        return new Promise((resolve, reject) => {
+            Logger.info('search Lane data: ' + id)
+            const params = [id]
+            client.execute(searchHeatId, params, { prepare: true })
+                .then(rs => {
+
+                    if (rs.rowLength === 0) {
+                        logger.error('no rows')
+                        return reject({ 'error': 'no data' })
+                    } else {
+                        const row = rs.first();
+                        const heatdata = row.get(0);
+                        const jsondata = JSON.parse(heatdata)
+                        return resolve(jsondata);
+                    }
+                })
+                .catch(data => reject(data))
+        })
     }
 
 
