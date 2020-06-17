@@ -4,7 +4,7 @@ import { ParamsDictionary } from 'express-serve-static-core';
 
 import HeatDao from '@daos/Heat/HeatDao';
 import { paramMissingError } from '@shared/constants';
-import logger from 'src/shared/Logger';
+import logger from '../shared/Logger';
 
 // Init shared
 const router = Router();
