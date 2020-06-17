@@ -107,12 +107,14 @@ class HeatDao implements IHeatDao {
             let lastUuid: types.Uuid;
             const logg = Uuid + ' e: ' + heatdata.event + ' h: ' + heatdata.heat
             logger.info(logg.toString());
+            logger.info(JSON.stringify(heatdata));
 
             const params2 = [wkid, Uuid]
 
             this.getLastID()
                 .then(result => {
                     lastUuid = result;
+                    logger.info('last id ' + result);
                     return this.insertNewHeatID(heatdata, Uuid, result)
                 })
                 .then(() => client.execute(insertheatid, params2, { prepare: true }))

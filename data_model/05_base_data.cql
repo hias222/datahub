@@ -3,7 +3,7 @@ INSERT INTO colorado.heatdata (heatid, lastid, creation_date, lanes)
                       , [{
       athleteid: '123',
       birthdate: '2013-01-01',
-      firstname: 'Henri',
-      lastname: 'Wittl'
+      firstname: '',
+      lastname: ''
     }]
            );
