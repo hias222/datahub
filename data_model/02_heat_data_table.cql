@@ -1,3 +1,7 @@
+/*
+    02_heat_data_table.cql
+    */
+
 drop TABLE if exists colorado.heatdata;
 
 CREATE TABLE colorado.heatdata

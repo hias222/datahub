@@ -1,3 +1,7 @@
+/*
+    03_heat_ids.cql
+*/
+
 drop TABLE if exists colorado.heatids;
 
 CREATE TABLE colorado.heatids
