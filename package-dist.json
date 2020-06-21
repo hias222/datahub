@@ -1,12 +1,13 @@
 {
   "name": "datahub",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "description": "hub to cassandra",
+  "repository": {
+    "type": "files"
+  },
+  "license": "MIT",
   "scripts": {
-    "build": "node build.js",
-    "lint": "tslint --project \"tsconfig.json\"",
-    "start": "node -r module-alias/register . --env=production",
-    "start:dev": "nodemon",
-    "test": "nodemon --config ./spec/nodemon.json"
+    "start": "node -r module-alias/register . --env=production"
   },
   "nodemonConfig": {
     "watch": [
@@ -36,7 +37,8 @@
     "http-status-codes": "^1.4.0",
     "module-alias": "^2.2.2",
     "morgan": "^1.10.0",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "tslint": "^6.1.2"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.0.0",
@@ -58,7 +60,6 @@
     "supertest": "^4.0.2",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",
-    "tslint": "^6.1.2",
     "typescript": "^3.9.5"
   }
 }
