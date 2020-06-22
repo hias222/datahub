@@ -31,16 +31,20 @@ const sslconnect = {
     }
 }
 
-const conn = process.env.SSLCONNECT === 'true' ? sslconnect  : connectoptions
+const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
 logger.info(JSON.stringify(conn))
 
 const client = new Client(conn);
 
 const wkid = 1;
 
+// const insertheatquery = 'INSERT INTO colorado.heatdata \
+// (heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
+//    VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
+
 const insertheatquery = 'INSERT INTO colorado.heatdata \
-(heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
-    VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
+    (heatid, lastid, creation_date, lanes) \
+        VALUES (?, ?,toTimeStamp(now()), ?)';
 
 const insertheatid = 'INSERT INTO colorado.heatids \
     (wkid,creation_date, heatID ) \
@@ -140,13 +144,22 @@ class HeatDao implements IHeatDao {
             this.getLastID()
                 .then(result => {
                     lastUuid = result;
-                    logger.info('last id ' + result);
+                    logger.info('last id ' + result + ' new ' + Uuid);
                     return this.insertNewHeatID(heatdata, Uuid, result)
                 })
-                .then(() => client.execute(insertheatid, params2, { prepare: true }))
-                .then(() => this.updateLastHeatID(lastUuid, Uuid))
+                .then(() => {
+                    logger.info('insertheatid ' + wkid + ' ' + Uuid);
+                    return client.execute(insertheatid, params2, { prepare: true })
+                })
+                .then(() => {
+                    logger.info('update last heat ' + lastUuid)
+                    this.updateLastHeatID(lastUuid, Uuid)
+                })
                 .then(() => resolve({ 'uuid': Uuid }))
-                .catch(reason => reject({ 'uuid': Uuid, 'reason': reason }))
+                .catch(reason => {
+                    logger.error('failure in add heat')
+                    return reject({ 'uuid': Uuid, 'reason': reason })
+                })
         })
     }
 
@@ -169,15 +182,43 @@ class HeatDao implements IHeatDao {
 
     private async insertNewHeatID(heatdata: IHeat, newUuid: types.Uuid, lastUuid: string | types.Uuid): Promise<string> {
         return new Promise((resolve, reject) => {
-            const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
+            // const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, 'heatdata.name', heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
+            this.lanesdata(heatdata.lanes)
+                .then((lanes) => logger.info('ready ' + JSON.stringify(lanes)))
+                .catch((data) => logger.error('error ' + data))
+
+            const params = [newUuid, lastUuid, heatdata.lanes]
             client.execute(insertheatquery, params, { prepare: true })
                 .then(rs => {
+                    // logger.info(params)
                     resolve()
                 })
                 .catch(reason => {
+                    logger.info(params)
                     reject(reason.toString())
                 })
 
+        })
+    }
+
+    private async lanesdata(lanes: any) {
+        return new Promise((resolve, reject) => {
+
+            const count = Object.keys(lanes).length;
+            logger.info(count + ' -')
+
+            // const entries = Object.entries(lanes)
+            for (const lane in lanes) {
+                if (lane) {
+                    logger.info(lanes[lane].name)
+                    if (lanes[lane].name === undefined) {
+                        lanes.splice(lane,1)
+                        // return reject(JSON.stringify(lanes[lane]))
+                    }
+                }
+            }
+
+            return resolve(lanes)
         })
     }
 
