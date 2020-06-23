@@ -184,40 +184,48 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
             // const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, 'heatdata.name', heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
             this.lanesdata(heatdata.lanes)
-                .then((lanes) => logger.info('ready ' + JSON.stringify(lanes)))
-                .catch((data) => logger.error('error ' + data))
-
-            const params = [newUuid, lastUuid, heatdata.lanes]
-            client.execute(insertheatquery, params, { prepare: true })
+                .then((lanes) => {
+                    logger.info('ready ' + JSON.stringify(lanes))
+                    const params = [newUuid, lastUuid, lanes]
+                    return params
+                })
+                .then((params) => {
+                    logger.info('execute with ')
+                    return client.execute(insertheatquery, params, { prepare: true })
+                })
                 .then(rs => {
+                    logger.info('insert heat successfull')
                     // logger.info(params)
                     resolve()
                 })
-                .catch(reason => {
-                    logger.info(params)
+                .catch((reason) => {
+                    logger.error('failed insert heat error ' + reason)
                     reject(reason.toString())
                 })
-
         })
     }
 
     private async lanesdata(lanes: any) {
         return new Promise((resolve, reject) => {
-
-            const count = Object.keys(lanes).length;
-            logger.info(count + ' -')
-
             // const entries = Object.entries(lanes)
             for (const lane in lanes) {
                 if (lane) {
-                    logger.info(lanes[lane].name)
-                    if (lanes[lane].name === undefined) {
-                        lanes.splice(lane,1)
-                        // return reject(JSON.stringify(lanes[lane]))
-                    }
+                    // correct missing params
+                    if (lanes[lane].athleteid === undefined) lanes[lane].athleteid = 'NN'
+                    if (lanes[lane].birthdate === undefined) lanes[lane].birthdate = '2000-01-01'
+                    if (lanes[lane].firstname === undefined) lanes[lane].firstname = 'NN'
+                    if (lanes[lane].lastname === undefined) lanes[lane].lastname = 'NN'
+                    if (lanes[lane].entrytime === undefined) lanes[lane].entrytime = '00:00:00.00'
+                    if (lanes[lane].name === undefined) lanes[lane].name = 'NN'
+                    if (lanes[lane].code === undefined) lanes[lane].code = '0000'
+                    if (lanes[lane].type === undefined) lanes[lane].type = 'lane'
+                    if (lanes[lane].event === undefined) lanes[lane].event = '0'
+                    if (lanes[lane].place === undefined) lanes[lane].place = '0'
+                    if (lanes[lane].finishtime === undefined) lanes[lane].finishtime = '00:00,00'
+                    if (lanes[lane].heat === undefined) lanes[lane].heat = '0'
                 }
             }
-
+            // logger.log(lanes)
             return resolve(lanes)
         })
     }
