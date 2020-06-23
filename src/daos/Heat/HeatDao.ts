@@ -86,28 +86,12 @@ class HeatDao implements IHeatDao {
      *
      */
     public async getAll(): Promise<IHeat[]> {
-        // TODO
-        // await client.connect();
-        const rs = await client.execute('SELECT JSON * FROM colorado.heatdata');
-        const row = rs.first();
-        // const heatID = row.get('event_heat_id');
-        const heatdata = row.get(0);
-        const jsondata = JSON.parse(heatdata)
-        // Logger.info(`Lane data: ${lanes}`)
-        // await client.shutdown();
-        return jsondata as any;
-    }
-
-    /**
-     *
-     */
-    public async search(id: string): Promise<IHeat[]> {
-        // await client.connect();
         return new Promise((resolve, reject) => {
-            Logger.info('search Lane data: ' + id)
-            const params = [id]
-            client.execute(searchHeatId, params, { prepare: true })
-                .then(rs => {
+            this.getLastID().then((lastid) => {
+                const params = [lastid]
+                return client.execute(searchHeatId, params, { prepare: true })
+            })
+                .then((rs) => {
                     if (rs.rowLength === 0) {
                         logger.error('no rows')
                         return reject({ 'error': 'no data' })
@@ -118,7 +102,34 @@ class HeatDao implements IHeatDao {
                         return resolve(jsondata);
                     }
                 })
-                .catch(data => reject(data))
+                .catch((data) => reject(data))
+        })
+    }
+
+    /**
+     *
+     */
+    public async search(id: string): Promise<IHeat[]> {
+        // await client.connect();
+        return new Promise((resolve, reject) => {
+            Logger.info('search Lane data: ' + id)
+
+
+            const params = [id]
+            client.execute(searchHeatId, params, { prepare: true })
+                .then((rs) => {
+                    if (rs.rowLength === 0) {
+                        logger.error('no rows')
+                        return reject({ 'error': 'no data' })
+                    } else {
+                        const row = rs.first();
+                        const heatdata = row.get(0);
+                        const jsondata = JSON.parse(heatdata)
+                        return resolve(jsondata);
+                    }
+                })
+                .catch((data) => reject(data))
+
         })
     }
 
@@ -187,7 +198,7 @@ class HeatDao implements IHeatDao {
                     return params
                 })
                 .then((params) => {
-                    logger.info('execute with ' )
+                    logger.info('execute with ')
                     logger.info(params)
                     return client.execute(insertheatquery, params, { prepare: true })
                 })
