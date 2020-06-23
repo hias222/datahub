@@ -56,7 +56,8 @@ const selectlastheatid = 'SELECT heatid, creation_date, wkid \
         where wkid= ? \
         LIMIT 10';
 
-const searchHeatId = 'SELECT JSON * FROM colorado.heatdata where heatid = ?'
+const searchHeatId = 'SELECT JSON heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round FROM colorado.heatdata where heatid = ? LIMIT 10';
+
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
@@ -89,6 +90,7 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
             this.getLastID().then((lastid) => {
                 const params = [lastid]
+                logger.info('search for ' + lastid)
                 return client.execute(searchHeatId, params, { prepare: true })
             })
                 .then((rs) => {
@@ -102,7 +104,10 @@ class HeatDao implements IHeatDao {
                         return resolve(jsondata);
                     }
                 })
-                .catch((data) => reject(data))
+                .catch((data) => {
+                    logger.error('failed getAll')
+                    return reject(data)
+                })
         })
     }
 
@@ -113,8 +118,6 @@ class HeatDao implements IHeatDao {
         // await client.connect();
         return new Promise((resolve, reject) => {
             Logger.info('search Lane data: ' + id)
-
-
             const params = [id]
             client.execute(searchHeatId, params, { prepare: true })
                 .then((rs) => {

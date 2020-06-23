@@ -12,3 +12,5 @@ cqlsh.py ${cosmoshost} 10350 -u ${cosmosusername} -p ${cosmospassword} --ssl -f 
 cqlsh.py ${cosmoshost} 10350 -u ${cosmosusername} -p ${cosmospassword} --ssl -f 03_heat_ids.cql
 cqlsh.py ${cosmoshost} 10350 -u ${cosmosusername} -p ${cosmospassword} --ssl -f 04_base_data.cql
 cqlsh.py ${cosmoshost} 10350 -u ${cosmosusername} -p ${cosmospassword} --ssl -f 05_base_data.cql
+
+echo cqlsh.py ${cosmoshost} 10350 -u ${cosmosusername} -p ${cosmospassword} --ssl
