@@ -38,13 +38,9 @@ const client = new Client(conn);
 
 const wkid = 1;
 
-// const insertheatquery = 'INSERT INTO colorado.heatdata \
-// (heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
-//    VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
-
 const insertheatquery = 'INSERT INTO colorado.heatdata \
-    (heatid, lastid, creation_date, lanes) \
-        VALUES (?, ?,toTimeStamp(now()), ?)';
+(heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
+ VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
 
 const insertheatid = 'INSERT INTO colorado.heatids \
     (wkid,creation_date, heatID ) \
@@ -186,11 +182,13 @@ class HeatDao implements IHeatDao {
             this.lanesdata(heatdata.lanes)
                 .then((lanes) => {
                     logger.info('ready ' + JSON.stringify(lanes))
-                    const params = [newUuid, lastUuid, lanes]
+                    const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
+                    // const params = [newUuid, lastUuid, lanes]
                     return params
                 })
                 .then((params) => {
-                    logger.info('execute with ')
+                    logger.info('execute with ' )
+                    logger.info(params)
                     return client.execute(insertheatquery, params, { prepare: true })
                 })
                 .then(rs => {
