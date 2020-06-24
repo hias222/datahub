@@ -34,6 +34,7 @@ const sslconnect = {
 const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
 logger.info(JSON.stringify(conn))
 
+
 const client = new Client(conn);
 
 const wkid = 1;
@@ -56,12 +57,14 @@ const selectlastheatid = 'SELECT heatid, creation_date, wkid \
         where wkid= ? \
         LIMIT 10';
 
-const searchHeatId = 'SELECT JSON heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round FROM colorado.heatdata where heatid = ? LIMIT 10';
+const searchHeatId = 'SELECT heatid, lastid, event, heat, \
+    creation_date, lanes, name, swimstyle, competition, distance, \
+    gender, relaycount, round FROM colorado.heatdata where heatid = ? LIMIT 10';
 
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
-    getAll: () => Promise<IHeat[]>;
+    getAll: () => Promise<types.Row>;
     search: (id: string) => Promise<IHeat[]>;
     add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
@@ -86,7 +89,7 @@ class HeatDao implements IHeatDao {
     /**
      *
      */
-    public async getAll(): Promise<IHeat[]> {
+    public async getAll(): Promise<types.Row> {
         return new Promise((resolve, reject) => {
             this.getLastID().then((lastid) => {
                 const params = [lastid]
@@ -99,9 +102,8 @@ class HeatDao implements IHeatDao {
                         return reject({ 'error': 'no data' })
                     } else {
                         const row = rs.first();
-                        const heatdata = row.get(0);
-                        const jsondata = JSON.parse(heatdata)
-                        return resolve(jsondata);
+                        logger.info(JSON.stringify(row))
+                        return resolve(row);
                     }
                 })
                 .catch((data) => {
@@ -120,7 +122,7 @@ class HeatDao implements IHeatDao {
             Logger.info('search Lane data: ' + id)
             const params = [id]
             client.execute(searchHeatId, params, { prepare: true })
-                .then((rs) => {
+                .then((rs: any) => {
                     if (rs.rowLength === 0) {
                         logger.error('no rows')
                         return reject({ 'error': 'no data' })
@@ -131,7 +133,7 @@ class HeatDao implements IHeatDao {
                         return resolve(jsondata);
                     }
                 })
-                .catch((data) => reject(data))
+                .catch((data: any) => reject(data))
 
         })
     }
@@ -178,12 +180,12 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
 
             client.execute(selectlastheatid, params, { prepare: true })
-                .then(rs => {
+                .then((rs: any) => {
                     const row = rs.first();
                     const heatid = row.get(0);
                     return resolve(heatid)
                 })
-                .catch(reason => {
+                .catch((reason: any) => {
                     return reject(reason.toString())
                 })
 
@@ -246,10 +248,10 @@ class HeatDao implements IHeatDao {
         return new Promise((resolve, reject) => {
             const params = [nextUuid, updateUuid];
             client.execute(updateheatid, params, { prepare: true })
-                .then(rs => {
+                .then(() => {
                     resolve()
                 })
-                .catch(reason => {
+                .catch((reason: any) => {
                     reject(reason.toString())
                 })
 
