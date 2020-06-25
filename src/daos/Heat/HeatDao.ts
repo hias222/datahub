@@ -57,7 +57,7 @@ const selectlastheatid = 'SELECT heatid, creation_date, wkid \
         where wkid= ? \
         LIMIT 10';
 
-const searchHeatId = 'SELECT heatid, lastid, event, heat, \
+const searchHeatId = 'SELECT heatid, lastid, nextid, event, heat, \
     creation_date, lanes, name, swimstyle, competition, distance, \
     gender, relaycount, round FROM colorado.heatdata where heatid = ? LIMIT 10';
 
@@ -65,7 +65,7 @@ const searchHeatId = 'SELECT heatid, lastid, event, heat, \
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
     getAll: () => Promise<types.Row>;
-    search: (id: string) => Promise<IHeat[]>;
+    search: (id: string) => Promise<types.Row>;
     add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
@@ -116,7 +116,7 @@ class HeatDao implements IHeatDao {
     /**
      *
      */
-    public async search(id: string): Promise<IHeat[]> {
+    public async search(id: string): Promise<types.Row> {
         // await client.connect();
         return new Promise((resolve, reject) => {
             Logger.info('search Lane data: ' + id)
@@ -128,9 +128,7 @@ class HeatDao implements IHeatDao {
                         return reject({ 'error': 'no data' })
                     } else {
                         const row = rs.first();
-                        const heatdata = row.get(0);
-                        const jsondata = JSON.parse(heatdata)
-                        return resolve(jsondata);
+                        return resolve(row);
                     }
                 })
                 .catch((data: any) => reject(data))
