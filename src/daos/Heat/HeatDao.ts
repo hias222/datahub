@@ -64,8 +64,8 @@ const searchHeatId = 'SELECT heatid, lastid, nextid, event, heat, \
 
 export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
-    getAll: () => Promise<types.Row>;
-    search: (id: string) => Promise<types.Row>;
+    getAll: () => Promise<any>;
+    search: (id: string) => Promise<any>;
     add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
@@ -88,8 +88,9 @@ class HeatDao implements IHeatDao {
 
     /**
      *
+     *  public async getAll(): Promise<types.Row> {
      */
-    public async getAll(): Promise<types.Row> {
+    public async getAll(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.getLastID().then((lastid) => {
                 const params = [lastid]
@@ -102,10 +103,14 @@ class HeatDao implements IHeatDao {
                         return reject({ 'error': 'no data' })
                     } else {
                         const row = rs.first();
-                        logger.info(JSON.stringify(row))
-                        return resolve(row);
+                        // logger.info(JSON.stringify(row))
+                        logger.info('return data getALL()')
+                        return row
+                        // return resolve(row);
                     }
                 })
+                .then((data) => this.clearlanesdata(data))
+                .then((rs) => resolve(rs))
                 .catch((data) => {
                     logger.error('failed getAll')
                     return reject(data)
@@ -116,7 +121,7 @@ class HeatDao implements IHeatDao {
     /**
      *
      */
-    public async search(id: string): Promise<types.Row> {
+    public async search(id: string): Promise<any> {
         // await client.connect();
         return new Promise((resolve, reject) => {
             Logger.info('search Lane data: ' + id)
@@ -128,9 +133,11 @@ class HeatDao implements IHeatDao {
                         return reject({ 'error': 'no data' })
                     } else {
                         const row = rs.first();
-                        return resolve(row);
+                        return row
                     }
                 })
+                .then((data) => this.clearlanesdata(data))
+                .then((rs) => resolve(rs))
                 .catch((data: any) => reject(data))
 
         })
@@ -147,8 +154,7 @@ class HeatDao implements IHeatDao {
             let lastUuid: types.Uuid;
             const logg = Uuid + ' e: ' + heatdata.event + ' h: ' + heatdata.heat
             logger.info(logg.toString());
-            logger.info(JSON.stringify(heatdata));
-
+            // logger.info(JSON.stringify(heatdata));
             const params2 = [wkid, Uuid]
 
             this.getLastID()
@@ -223,12 +229,12 @@ class HeatDao implements IHeatDao {
             for (const lane in lanes) {
                 if (lane) {
                     // correct missing params
-                    if (lanes[lane].athleteid === undefined) lanes[lane].athleteid = 'NN'
-                    if (lanes[lane].birthdate === undefined) lanes[lane].birthdate = '2000-01-01'
-                    if (lanes[lane].firstname === undefined) lanes[lane].firstname = 'NN'
-                    if (lanes[lane].lastname === undefined) lanes[lane].lastname = 'NN'
+                    if (lanes[lane].athleteid === undefined) lanes[lane].athleteid = 'NaN'
+                    if (lanes[lane].birthdate === undefined) lanes[lane].birthdate = '0000-00-00'
+                    if (lanes[lane].firstname === undefined) lanes[lane].firstname = 'NaN'
+                    if (lanes[lane].lastname === undefined) lanes[lane].lastname = 'NaN'
                     if (lanes[lane].entrytime === undefined) lanes[lane].entrytime = '00:00:00.00'
-                    if (lanes[lane].name === undefined) lanes[lane].name = 'NN'
+                    if (lanes[lane].name === undefined) lanes[lane].name = 'NaN'
                     if (lanes[lane].code === undefined) lanes[lane].code = '0000'
                     if (lanes[lane].type === undefined) lanes[lane].type = 'lane'
                     if (lanes[lane].event === undefined) lanes[lane].event = '0'
@@ -239,6 +245,27 @@ class HeatDao implements IHeatDao {
             }
             // logger.log(lanes)
             return resolve(lanes)
+        })
+    }
+
+    private async clearlanesdata(row: any) {
+        return new Promise((resolve, reject) => {
+            // const entries = Object.entries(lanes)
+            for (const lane in row.lanes) {
+                if (lane) {
+                    // correct missing params
+                    if (row.lanes[lane].athleteid === 'NaN') row.lanes[lane].athleteid = ''
+                    if (row.lanes[lane].birthdate === '0000-00-00') row.lanes[lane].birthdate = ''
+                    if (row.lanes[lane].firstname === 'NaN') row.lanes[lane].firstname = ''
+                    if (row.lanes[lane].lastname === 'NaN') row.lanes[lane].lastname = 'keine Belegung'
+                    if (row.lanes[lane].entrytime === '00:00:00.00') row.lanes[lane].entrytime = 'NT'
+                    if (row.lanes[lane].name === 'NaN') row.lanes[lane].name = ''
+                    if (row.lanes[lane].code === '0000') row.lanes[lane].code = ''
+                    if (row.lanes[lane].finishtime === '00:00,00') row.lanes[lane].finishtime = 'NT'
+                }
+            }
+            // logger.log(lanes)
+            return resolve(row)
         })
     }
 
