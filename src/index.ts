@@ -1,5 +1,5 @@
 import './LoadEnv'; // Must be the first import
-import app from '@server';
+import app from './Server';
 import logger from '@shared/Logger';
 
 // Start the server

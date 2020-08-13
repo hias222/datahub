@@ -16,6 +16,12 @@ from mac
 brew install cassandra
 cqlsh --> connects to localhost docker
 
+## start
+
+### dev
+
+npm run start:dev
+
 ## app
 
 npm install -g express-generator-typescript
