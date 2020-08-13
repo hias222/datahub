@@ -23,7 +23,7 @@
         "src/shared/*"
       ],
       "@server": [
-        "src/Server"
+        "src/ServerNew"
       ]
     },
     "types": [
