@@ -3,6 +3,17 @@
   "compilerOptions": {
     "sourceMap": false
   },
+  "paths": {
+    "@daos/*": [
+      "src/daos/*"
+    ],
+    "@entities/*": [
+      "src/entities/*"
+    ],
+    "@shared/*": [
+      "src/shared/*"
+    ]
+  },
   "exclude": [
     "spec",
     "src/**/*.mock.ts",

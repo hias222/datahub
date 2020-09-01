@@ -22,8 +22,7 @@
   "_moduleAliases": {
     "@daos": "daos",
     "@entities": "entities",
-    "@shared": "shared",
-    "@server": "Server"
+    "@shared": "shared"
   },
   "dependencies": {
     "cassandra-driver": "^4.5.2",

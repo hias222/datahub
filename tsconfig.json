@@ -21,9 +21,6 @@
       ],
       "@shared/*": [
         "src/shared/*"
-      ],
-      "@server": [
-        "src/ServerNew"
       ]
     },
     "types": [
