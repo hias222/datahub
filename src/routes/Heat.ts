@@ -26,7 +26,6 @@ router.get('/all', async (req: Request, res: Response) => {
 
 router.post('/add', async (req: Request, res: Response) => {
     const heatdata = req.body;
-    
     if (!heatdata) {
         return res.status(BAD_REQUEST).json({
             error: paramMissingError,

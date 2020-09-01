@@ -5,6 +5,7 @@ import { Client, types } from 'cassandra-driver';
 
 import Logger from '../../shared/Logger';
 import logger from '../../shared/Logger';
+import { connect } from 'http2';
 
 const CONTACTPOINT = process.env.CONTACTPOINT !== undefined ? process.env.CONTACTPOINT : 'localhost'
 const CASSANDRA_USER = process.env.CASSANDRA_USER !== undefined ? process.env.CASSANDRA_USER : 'localhost'
@@ -33,7 +34,6 @@ const sslconnect = {
 
 const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
 logger.info(JSON.stringify(conn))
-
 
 const client = new Client(conn);
 
@@ -71,10 +71,14 @@ export interface IHeatDao {
     delete: (id: number) => Promise<void>;
 }
 
+let connectSuccess: boolean
+
 class HeatDao implements IHeatDao {
 
     constructor() {
-        client.connect();
+        client.connect()
+            .then(() => connectSuccess = true)
+            .catch(() => connectSuccess = false)
     }
 
     /**
@@ -85,62 +89,68 @@ class HeatDao implements IHeatDao {
         return [] as any;
     }
 
-
     /**
      *
      *  public async getAll(): Promise<types.Row> {
      */
     public async getAll(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.getLastID().then((lastid) => {
-                const params = [lastid]
-                logger.info('search for ' + lastid)
-                return client.execute(searchHeatId, params, { prepare: true })
+        if (connectSuccess) {
+            return new Promise((resolve, reject) => {
+                this.getLastID().then((lastid) => {
+                    const params = [lastid]
+                    logger.info('search for ' + lastid)
+                    return client.execute(searchHeatId, params, { prepare: true })
+                })
+                    .then((rs) => {
+                        if (rs.rowLength === 0) {
+                            logger.error('no rows')
+                            return reject({ 'error': 'no data' })
+                        } else {
+                            const row = rs.first();
+                            // logger.info(JSON.stringify(row))
+                            logger.info('return data getALL()')
+                            return row
+                            // return resolve(row);
+                        }
+                    })
+                    .then((data) => this.clearlanesdata(data))
+                    .then((rs) => resolve(rs))
+                    .catch((data) => {
+                        logger.error('failed getAll')
+                        return reject(data)
+                    })
             })
-                .then((rs) => {
-                    if (rs.rowLength === 0) {
-                        logger.error('no rows')
-                        return reject({ 'error': 'no data' })
-                    } else {
-                        const row = rs.first();
-                        // logger.info(JSON.stringify(row))
-                        logger.info('return data getALL()')
-                        return row
-                        // return resolve(row);
-                    }
-                })
-                .then((data) => this.clearlanesdata(data))
-                .then((rs) => resolve(rs))
-                .catch((data) => {
-                    logger.error('failed getAll')
-                    return reject(data)
-                })
-        })
+        } else {
+            return { 'error': 'no connection' };
+        }
     }
 
     /**
      *
      */
     public async search(id: string): Promise<any> {
-        // await client.connect();
-        return new Promise((resolve, reject) => {
-            Logger.info('search Lane data: ' + id)
-            const params = [id]
-            client.execute(searchHeatId, params, { prepare: true })
-                .then((rs: any) => {
-                    if (rs.rowLength === 0) {
-                        logger.error('no rows')
-                        return reject({ 'error': 'no data' })
-                    } else {
-                        const row = rs.first();
-                        return row
-                    }
-                })
-                .then((data) => this.clearlanesdata(data))
-                .then((rs) => resolve(rs))
-                .catch((data: any) => reject(data))
+        if (connectSuccess) {
+            return new Promise((resolve, reject) => {
+                Logger.info('search Lane data: ' + id)
+                const params = [id]
+                client.execute(searchHeatId, params, { prepare: true })
+                    .then((rs: any) => {
+                        if (rs.rowLength === 0) {
+                            logger.error('no rows')
+                            return reject({ 'error': 'no data' })
+                        } else {
+                            const row = rs.first();
+                            return row
+                        }
+                    })
+                    .then((data) => this.clearlanesdata(data))
+                    .then((rs) => resolve(rs))
+                    .catch((data: any) => reject(data))
 
-        })
+            })
+        } else {
+            return { 'error': 'no connection' };
+        }
     }
 
 

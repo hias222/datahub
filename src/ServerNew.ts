@@ -7,6 +7,7 @@ import { BAD_REQUEST } from 'http-status-codes';
 import 'express-async-errors';
 
 import BaseRouter from './routes';
+import HealthRouter from './health';
 import logger from '@shared/Logger';
 
 import cors from 'cors';
@@ -39,6 +40,9 @@ if (process.env.NODE_ENV === 'production') {
 
 // Add APIs
 app.use('/api', BaseRouter);
+
+// Add APIs
+app.use('/health', HealthRouter);
 
 
 // Print API errors
