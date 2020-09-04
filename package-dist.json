@@ -1,6 +1,6 @@
 {
   "name": "datahub",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "hub to cassandra",
   "repository": {
     "type": "files"
