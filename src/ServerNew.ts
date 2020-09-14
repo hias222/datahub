@@ -12,7 +12,6 @@ import logger from '@shared/Logger';
 
 import cors from 'cors';
 
-
 // Init express
 const app = express();
 

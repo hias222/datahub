@@ -5,7 +5,7 @@ import { Client, types } from 'cassandra-driver';
 
 import Logger from '../../shared/Logger';
 import logger from '../../shared/Logger';
-import { connect } from 'http2';
+// import { connect } from 'http2';
 
 const CONTACTPOINT = process.env.CONTACTPOINT !== undefined ? process.env.CONTACTPOINT : 'localhost'
 const CASSANDRA_USER = process.env.CASSANDRA_USER !== undefined ? process.env.CASSANDRA_USER : 'localhost'
@@ -71,14 +71,12 @@ export interface IHeatDao {
     delete: (id: number) => Promise<void>;
 }
 
-let connectSuccess: boolean
-
 class HeatDao implements IHeatDao {
 
     constructor() {
         client.connect()
-            .then(() => connectSuccess = true)
-            .catch(() => connectSuccess = false)
+            .then(() => logger.info('connected'))
+            .catch((data) => logger.error(data))
     }
 
     /**
@@ -94,65 +92,60 @@ class HeatDao implements IHeatDao {
      *  public async getAll(): Promise<types.Row> {
      */
     public async getAll(): Promise<any> {
-        if (connectSuccess) {
-            return new Promise((resolve, reject) => {
-                this.getLastID().then((lastid) => {
+        return new Promise((resolve, reject) => {
+            client.connect()
+                .then(() =>
+                    this.getLastID())
+                .then((lastid) => {
                     const params = [lastid]
                     logger.info('search for ' + lastid)
                     return client.execute(searchHeatId, params, { prepare: true })
                 })
-                    .then((rs) => {
-                        if (rs.rowLength === 0) {
-                            logger.error('no rows')
-                            return reject({ 'error': 'no data' })
-                        } else {
-                            const row = rs.first();
-                            // logger.info(JSON.stringify(row))
-                            logger.info('return data getALL()')
-                            return row
-                            // return resolve(row);
-                        }
-                    })
-                    .then((data) => this.clearlanesdata(data))
-                    .then((rs) => resolve(rs))
-                    .catch((data) => {
-                        logger.error('failed getAll')
-                        return reject(data)
-                    })
-            })
-        } else {
-            return { 'error': 'no connection' };
-        }
+                .then((rs) => {
+                    if (rs.rowLength === 0) {
+                        logger.error('no rows')
+                        return reject({ 'error': 'no data' })
+                    } else {
+                        const row = rs.first();
+                        // logger.info(JSON.stringify(row))
+                        logger.info('return data getALL()')
+                        return row
+                        // return resolve(row);
+                    }
+                })
+                .then((data) => this.clearlanesdata(data))
+                .then((rs) => resolve(rs))
+                .catch((data) => {
+                    logger.error(data.name)
+                    return reject(data)
+                })
+        })
     }
 
     /**
      *
      */
     public async search(id: string): Promise<any> {
-        if (connectSuccess) {
-            return new Promise((resolve, reject) => {
-                Logger.info('search Lane data: ' + id)
-                const params = [id]
-                client.execute(searchHeatId, params, { prepare: true })
-                    .then((rs: any) => {
-                        if (rs.rowLength === 0) {
-                            logger.error('no rows')
-                            return reject({ 'error': 'no data' })
-                        } else {
-                            const row = rs.first();
-                            return row
-                        }
-                    })
-                    .then((data) => this.clearlanesdata(data))
-                    .then((rs) => resolve(rs))
-                    .catch((data: any) => reject(data))
-
-            })
-        } else {
-            return { 'error': 'no connection' };
-        }
+        return new Promise((resolve, reject) => {
+            Logger.info('search Lane data: ' + id)
+            const params = [id]
+            client.connect()
+                .then(() =>
+                    client.execute(searchHeatId, params, { prepare: true }))
+                .then((rs: any) => {
+                    if (rs.rowLength === 0) {
+                        logger.error('no rows')
+                        return reject({ 'error': 'no data' })
+                    } else {
+                        const row = rs.first();
+                        return row
+                    }
+                })
+                .then((data) => this.clearlanesdata(data))
+                .then((rs) => resolve(rs))
+                .catch((data: any) => reject(data))
+        })
     }
-
 
     /**
      *
@@ -167,7 +160,9 @@ class HeatDao implements IHeatDao {
             // logger.info(JSON.stringify(heatdata));
             const params2 = [wkid, Uuid]
 
-            this.getLastID()
+            client.connect()
+                .then(() =>
+                    this.getLastID())
                 .then(result => {
                     lastUuid = result;
                     logger.info('last id ' + result + ' new ' + Uuid);
@@ -192,7 +187,6 @@ class HeatDao implements IHeatDao {
     private async getLastID(): Promise<types.Uuid> {
         const params = [wkid]
         return new Promise((resolve, reject) => {
-
             client.execute(selectlastheatid, params, { prepare: true })
                 .then((rs: any) => {
                     const row = rs.first();
@@ -209,7 +203,9 @@ class HeatDao implements IHeatDao {
     private async insertNewHeatID(heatdata: IHeat, newUuid: types.Uuid, lastUuid: string | types.Uuid): Promise<string> {
         return new Promise((resolve, reject) => {
             // const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, 'heatdata.name', heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
-            this.lanesdata(heatdata.lanes)
+            client.connect()
+                .then(() =>
+                    this.lanesdata(heatdata.lanes))
                 .then((lanes) => {
                     logger.info('ready ' + JSON.stringify(lanes))
                     const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
@@ -282,7 +278,9 @@ class HeatDao implements IHeatDao {
     private async updateLastHeatID(updateUuid: types.Uuid, nextUuid: types.Uuid): Promise<string> {
         return new Promise((resolve, reject) => {
             const params = [nextUuid, updateUuid];
-            client.execute(updateheatid, params, { prepare: true })
+            client.connect()
+                .then(() =>
+                    client.execute(updateheatid, params, { prepare: true }))
                 .then(() => {
                     resolve()
                 })
