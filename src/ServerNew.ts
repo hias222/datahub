@@ -17,7 +17,8 @@ const app = express();
 
 // allow from all cors
 app.use(cors());
-app.options('*', cors());
+// test it fro arm
+// app.options('*', cors());
 
 /************************************************************************************
  *                              Set basic express settings

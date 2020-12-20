@@ -42,3 +42,9 @@ $ npx express-generator-typescript --with-auth
 Debugging
 
 During development, express-generator-typescript uses nodemon to restart the server when changes are detected. If you want to enable debugging for node, you'll need to modify the nodemon configurations. This is located under nodemonConfig: in package.json for the server and ./spec/nodemon.json for unit-testing. For the exec property, replace ts-node with node --inspect -r ts-node/register.
+
+### errors
+
+#### check tsc craetion
+
+npx ts-node -r tsconfig-paths/register ./src --env=production
