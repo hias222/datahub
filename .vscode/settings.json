@@ -4,5 +4,6 @@
         ".vscode{,/**}"
     ],
     "appService.defaultWebAppToDeploy": "/subscriptions/c7d4f7fe-53f6-4043-a10a-d574ccc6db26/resourceGroups/resLinux/providers/Microsoft.Web/sites/appdatahub",
-    "appService.deploySubpath": "dist"
+    "appService.deploySubpath": "dist",
+    "cmake.configureOnOpen": false
 }

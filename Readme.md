@@ -48,3 +48,21 @@ During development, express-generator-typescript uses nodemon to restart the ser
 #### check tsc craetion
 
 npx ts-node -r tsconfig-paths/register ./src --env=production
+
+## Docker
+
+```bash
+# start local docker
+
+npm run build
+
+docker build -t datahub .
+
+docker login
+docker tag datahub hias222/datahub:0.1.0
+docker push hias222/datahub:0.1.0
+
+DEST_MQTT_HOST
+docker run -p 8080:8080 -e DEST_MQTT_HOST=localhost datahub
+docker images
+```
