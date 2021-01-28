@@ -11,7 +11,7 @@ const router = Router();
 const heatDao = new HeatDao();
 
 /******************************************************************************
- *                      Get All heat - "GET /api/heat/all"
+ *                      Get All heat - "GET /datahub/heat/all"
  ******************************************************************************/
 
 router.get('/all', async (req: Request, res: Response) => {
@@ -21,60 +21,7 @@ router.get('/all', async (req: Request, res: Response) => {
 
 
 /******************************************************************************
- *                       Add One - "POST /api/heat/add"
- ******************************************************************************/
-
-router.post('/add', async (req: Request, res: Response) => {
-    const heatdata = req.body;
-    if (!heatdata) {
-        return res.status(BAD_REQUEST).json({
-            error: paramMissingError,
-        });
-    }
-    heatDao.add(heatdata)
-        .then(
-            answer => {
-                return res.status(CREATED).json(answer);
-            })
-        .catch(
-            answer => {
-                logger.info(JSON.stringify(answer))
-                return res.status(BAD_REQUEST).json(answer);
-            }
-        )
-});
-
-
-/******************************************************************************
- *                       Update - "PUT /api/heat/update"
- ******************************************************************************/
-
-router.put('/update', async (req: Request, res: Response) => {
-    const { user } = req.body;
-    if (!user) {
-        return res.status(BAD_REQUEST).json({
-            error: paramMissingError,
-        });
-    }
-    user.id = Number(user.id);
-    await heatDao.update(user);
-    return res.status(OK).end();
-});
-
-
-/******************************************************************************
- *                    Delete - "DELETE /api/heat/delete/:id"
- ******************************************************************************/
-
-router.delete('/delete/:id', async (req: Request, res: Response) => {
-    const { id } = req.params as ParamsDictionary;
-    await heatDao.delete(Number(id));
-    return res.status(OK).end();
-});
-
-
-/******************************************************************************
- *                    Delete - "DELETE /api/heat/delete/:id"
+ *                    Delete - "DELETE /datahub/heat/search/:id"
  ******************************************************************************/
 
 router.get('/search/:id', async (req: Request, res: Response) => {

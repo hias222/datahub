@@ -5,7 +5,7 @@ import HealthRouter from './Health';
 const router = Router();
 
 // Add sub-routes
-router.use('/', HealthRouter);
+router.use('/health', HealthRouter);
 
 // Export the base-router
 export default router;

@@ -39,10 +39,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Add APIs
-app.use('/api', BaseRouter);
+app.use('/datahub', BaseRouter);
 
 // Add APIs
-app.use('/health', HealthRouter);
+app.use('/datahub', HealthRouter);
 
 
 // Print API errors
