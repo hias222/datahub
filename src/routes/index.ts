@@ -7,7 +7,7 @@ const router = Router();
 
 // Add sub-routes
 // router.use('/users', UserRouter);
-router.use('/heat', HeatRouter);
+router.use('/datahub/heat', HeatRouter);
 router.use('/internal', AddRouter);
 
 // Export the base-router
