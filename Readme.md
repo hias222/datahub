@@ -63,6 +63,6 @@ docker tag datahub hias222/datahub:0.1.0
 docker push hias222/datahub:0.1.0
 
 DEST_MQTT_HOST
-docker run -p 8080:8080 -e DEST_MQTT_HOST=localhost datahub
+docker run -p 8080:8080 datahub
 docker images
 ```
