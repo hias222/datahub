@@ -11,7 +11,7 @@ const { File, Console } = transports;
 
 // Init Logger
 const logger = createLogger({
-    level: 'info',
+    level: 'debug',
 });
 
 /**
@@ -34,8 +34,25 @@ if (process.env.NODE_ENV === 'production') {
         filename: './logs/combined.log',
         format: fileFormat,
     });
-    logger.add(errTransport);
-    logger.add(infoTransport);
+    //logger.add(errTransport);
+    //logger.add(infoTransport);
+
+    const errorStackFormat = format((info) => {
+        if (info.stack) {
+            // tslint:disable-next-line:no-console
+            console.log(info.stack);
+            return false;
+        }
+        return info;
+    });
+    
+    const consoleTransport = new Console({
+        format: format.combine(
+            format.simple(),
+            errorStackFormat(),
+        ),
+    });
+    logger.add(consoleTransport);
 
 } else {
 

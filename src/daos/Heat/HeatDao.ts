@@ -3,7 +3,6 @@ import '../../LoadEnv';
 import { IHeat } from '../../entities/Heat';
 import { Client, types } from 'cassandra-driver';
 
-import Logger from '../../shared/Logger';
 import logger from '../../shared/Logger';
 // import { connect } from 'http2';
 
@@ -127,7 +126,7 @@ class HeatDao implements IHeatDao {
      */
     public async search(id: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            Logger.info('search Lane data: ' + id)
+            logger.info('search Lane data: ' + id)
             const params = [id]
             client.connect()
                 .then(() =>
@@ -220,7 +219,7 @@ class HeatDao implements IHeatDao {
                 .then(rs => {
                     logger.info('insert heat successfull')
                     // logger.info(params)
-                    resolve()
+                    resolve('success')
                 })
                 .catch((reason) => {
                     logger.error('failed insert heat error ' + reason)
@@ -282,7 +281,7 @@ class HeatDao implements IHeatDao {
                 .then(() =>
                     client.execute(updateheatid, params, { prepare: true }))
                 .then(() => {
-                    resolve()
+                    resolve('sucess')
                 })
                 .catch((reason: any) => {
                     reject(reason.toString())
