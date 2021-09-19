@@ -1,10 +1,8 @@
 import { Request, Response, Router } from 'express';
-import { BAD_REQUEST, CREATED, OK } from 'http-status-codes';
 import { ParamsDictionary } from 'express-serve-static-core';
 
 import HeatDao from '@daos/Heat/HeatDao';
-import { paramMissingError } from '@shared/constants';
-import logger from '../shared/Logger';
+import { OK } from 'http-status-codes';
 
 // Init shared
 const router = Router();

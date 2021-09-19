@@ -4,6 +4,9 @@ import { IHeat } from '../../entities/Heat';
 import { Client, types } from 'cassandra-driver';
 
 import logger from '../../shared/Logger';
+
+var debug = process.env.DEBUG === 'true' ? true : false;
+
 // import { connect } from 'http2';
 
 const CONTACTPOINT = process.env.CONTACTPOINT !== undefined ? process.env.CONTACTPOINT : 'localhost'
@@ -38,19 +41,6 @@ const client = new Client(conn);
 
 const wkid = 1;
 
-const insertheatquery = 'INSERT INTO colorado.heatdata \
-(heatid, lastid, event, heat, creation_date, lanes, name, swimstyle, competition, distance, gender, relaycount, round) \
- VALUES (?, ?, ?, ?, toTimeStamp(now()), ?, ?, ?, ?, ?, ?, ? ,?)';
-
-const insertheatid = 'INSERT INTO colorado.heatids \
-    (wkid,creation_date, heatID ) \
-        VALUES (?,toTimeStamp(now()), ?)';
-
-const updateheatid = 'UPDATE colorado.heatdata \
-        SET \
-	    nextid= ? \
-        WHERE heatid=?';
-
 const selectlastheatid = 'SELECT heatid, creation_date, wkid \
         FROM colorado.heatids \
         where wkid= ? \
@@ -65,7 +55,6 @@ export interface IHeatDao {
     getOne: (email: string) => Promise<IHeat | null>;
     getAll: () => Promise<any>;
     search: (id: string) => Promise<any>;
-    add: (user: IHeat) => Promise<any>;
     update: (user: IHeat) => Promise<void>;
     delete: (id: number) => Promise<void>;
 }
@@ -146,43 +135,6 @@ class HeatDao implements IHeatDao {
         })
     }
 
-    /**
-     *
-     * @param user
-     */
-    public async add(heatdata: IHeat): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const Uuid = types.Uuid.random();
-            let lastUuid: types.Uuid;
-            const logg = Uuid + ' e: ' + heatdata.event + ' h: ' + heatdata.heat
-            logger.info(logg.toString());
-            // logger.info(JSON.stringify(heatdata));
-            const params2 = [wkid, Uuid]
-
-            client.connect()
-                .then(() =>
-                    this.getLastID())
-                .then(result => {
-                    lastUuid = result;
-                    logger.info('last id ' + result + ' new ' + Uuid);
-                    return this.insertNewHeatID(heatdata, Uuid, result)
-                })
-                .then(() => {
-                    logger.info('insertheatid ' + wkid + ' ' + Uuid);
-                    return client.execute(insertheatid, params2, { prepare: true })
-                })
-                .then(() => {
-                    logger.info('update last heat ' + lastUuid)
-                    this.updateLastHeatID(lastUuid, Uuid)
-                })
-                .then(() => resolve({ 'uuid': Uuid }))
-                .catch(reason => {
-                    logger.error('failure in add heat')
-                    return reject({ 'uuid': Uuid, 'reason': reason })
-                })
-        })
-    }
-
     private async getLastID(): Promise<types.Uuid> {
         const params = [wkid]
         return new Promise((resolve, reject) => {
@@ -199,94 +151,27 @@ class HeatDao implements IHeatDao {
         })
     }
 
-    private async insertNewHeatID(heatdata: IHeat, newUuid: types.Uuid, lastUuid: string | types.Uuid): Promise<string> {
-        return new Promise((resolve, reject) => {
-            // const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, 'heatdata.name', heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
-            client.connect()
-                .then(() =>
-                    this.lanesdata(heatdata.lanes))
-                .then((lanes) => {
-                    logger.info('ready ' + JSON.stringify(lanes))
-                    const params = [newUuid, lastUuid, heatdata.event, heatdata.heat, heatdata.lanes, heatdata.name, heatdata.swimstyle, heatdata.competition, heatdata.distance, heatdata.gender, heatdata.relaycount, heatdata.round];
-                    // const params = [newUuid, lastUuid, lanes]
-                    return params
-                })
-                .then((params) => {
-                    logger.info('execute with ')
-                    logger.info(params)
-                    return client.execute(insertheatquery, params, { prepare: true })
-                })
-                .then(rs => {
-                    logger.info('insert heat successfull')
-                    // logger.info(params)
-                    resolve('success')
-                })
-                .catch((reason) => {
-                    logger.error('failed insert heat error ' + reason)
-                    reject(reason.toString())
-                })
-        })
-    }
-
-    private async lanesdata(lanes: any) {
-        return new Promise((resolve, reject) => {
-            // const entries = Object.entries(lanes)
-            for (const lane in lanes) {
-                if (lane) {
-                    // correct missing params
-                    if (lanes[lane].athleteid === undefined) lanes[lane].athleteid = 'NaN'
-                    if (lanes[lane].birthdate === undefined) lanes[lane].birthdate = '0000-00-00'
-                    if (lanes[lane].firstname === undefined) lanes[lane].firstname = 'NaN'
-                    if (lanes[lane].lastname === undefined) lanes[lane].lastname = 'NaN'
-                    if (lanes[lane].entrytime === undefined) lanes[lane].entrytime = '00:00:00.00'
-                    if (lanes[lane].name === undefined) lanes[lane].name = 'NaN'
-                    if (lanes[lane].code === undefined) lanes[lane].code = '0000'
-                    if (lanes[lane].type === undefined) lanes[lane].type = 'lane'
-                    if (lanes[lane].event === undefined) lanes[lane].event = '0'
-                    if (lanes[lane].place === undefined) lanes[lane].place = '0'
-                    if (lanes[lane].finishtime === undefined) lanes[lane].finishtime = '00:00,00'
-                    if (lanes[lane].heat === undefined) lanes[lane].heat = '0'
-                }
-            }
-            // logger.log(lanes)
-            return resolve(lanes)
-        })
-    }
-
     private async clearlanesdata(row: any) {
         return new Promise((resolve, reject) => {
             // const entries = Object.entries(lanes)
             for (const lane in row.lanes) {
+                if (debug) logger.info(lane)
+                if (debug) logger.info(row.lanes[lane])
+                var jsonlane = JSON.parse(row.lanes[lane])
                 if (lane) {
                     // correct missing params
-                    if (row.lanes[lane].athleteid === 'NaN') row.lanes[lane].athleteid = ''
-                    if (row.lanes[lane].birthdate === '0000-00-00') row.lanes[lane].birthdate = ''
-                    if (row.lanes[lane].firstname === 'NaN') row.lanes[lane].firstname = ''
-                    if (row.lanes[lane].lastname === 'NaN') row.lanes[lane].lastname = 'keine Belegung'
-                    if (row.lanes[lane].entrytime === '00:00:00.00') row.lanes[lane].entrytime = 'NT'
-                    if (row.lanes[lane].name === 'NaN') row.lanes[lane].name = ''
-                    if (row.lanes[lane].code === '0000') row.lanes[lane].code = ''
-                    if (row.lanes[lane].finishtime === '00:00,00') row.lanes[lane].finishtime = 'NT'
+                    if (jsonlane.athleteid === 'NaN') jsonlane.athleteid = ''
+                    if (jsonlane.birthdate === '0000-00-00') jsonlane.birthdate = ''
+                    if (jsonlane.firstname === 'NaN') jsonlane.firstname = ''
+                    if (jsonlane.lastname === 'NaN') jsonlane.lastname = 'keine Belegung'
+                    if (jsonlane.entrytime === '00:00:00.00') jsonlane.entrytime = 'NT'
+                    if (jsonlane.name === 'NaN') jsonlane.name = ''
+                    if (jsonlane.code === '0000') jsonlane.code = ''
+                    if (jsonlane.finishtime === '00:00,00') jsonlane.finishtime = 'NT'
                 }
+                row.lanes[lane] = jsonlane
             }
-            // logger.log(lanes)
             return resolve(row)
-        })
-    }
-
-    private async updateLastHeatID(updateUuid: types.Uuid, nextUuid: types.Uuid): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const params = [nextUuid, updateUuid];
-            client.connect()
-                .then(() =>
-                    client.execute(updateheatid, params, { prepare: true }))
-                .then(() => {
-                    resolve('sucess')
-                })
-                .catch((reason: any) => {
-                    reject(reason.toString())
-                })
-
         })
     }
 
