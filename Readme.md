@@ -28,8 +28,7 @@ npm install -g express-generator-typescript
 
 npx express-generator-typescript "project name (default is express-gen-ts)"
 OR
-$ npx express-generator-typescript --with-auth
-
+npx express-generator-typescript --with-auth
 
     Run the server in development mode: npm run start:dev.
     Run all unit-tests: npm test.
