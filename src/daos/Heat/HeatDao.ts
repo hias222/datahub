@@ -1,7 +1,8 @@
 import '../../LoadEnv';
 
 import { IHeat } from '../../entities/Heat';
-import { Client, types } from 'cassandra-driver';
+import { Client, types, auth} from 'cassandra-driver';
+const fs = require('fs');
 
 import logger from '../../shared/Logger';
 
@@ -9,7 +10,10 @@ var debug = process.env.DEBUG === 'true' ? true : false;
 
 // import { connect } from 'http2';
 
+
 const CONTACTPOINT = process.env.CONTACTPOINT !== undefined ? process.env.CONTACTPOINT : 'localhost'
+const CONTACTPOINT_PORT = process.env.CONTACTPOINT_PORT 
+const CONTACTNAME = CONTACTPOINT_PORT !== undefined ? CONTACTPOINT + ":" + CONTACTPOINT_PORT : CONTACTPOINT
 const CASSANDRA_USER = process.env.CASSANDRA_USER !== undefined ? process.env.CASSANDRA_USER : 'localhost'
 const CASSANDRA_PASSWORD = process.env.CASSANDRA_PASSWORD !== undefined ? process.env.CASSANDRA_PASSWORD : 'localhost'
 
@@ -34,7 +38,28 @@ const sslconnect = {
     }
 }
 
-const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
+const auth2 = new auth.PlainTextAuthProvider(CASSANDRA_USER, CASSANDRA_PASSWORD);
+
+const sslOptions1 = {
+         ca: [
+                    fs.readFileSync('ssl/sf-class2-root.crt', 'utf-8')],      
+                    host: CONTACTPOINT,
+                    rejectUnauthorized: true
+        };
+
+
+const awsconnect = {
+                   contactPoints: [CONTACTPOINT],
+                   localDataCenter: process.env.LOCALDATACENTER,
+                   authProvider: auth,
+                   sslOptions: sslOptions1,
+                   protocolOptions: { port: CONTACTPOINT_PORT }
+};
+
+const conn = process.env.SSLCONNECT === 'true' ? sslconnect : process.env.SSLCONNECT === 'aws' ? awsconnect : connectoptions
+
+
+//const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
 logger.info(JSON.stringify(conn))
 
 const client = new Client(conn);
