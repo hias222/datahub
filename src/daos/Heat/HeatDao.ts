@@ -1,7 +1,9 @@
 import '../../LoadEnv';
 
 import { IHeat } from '../../entities/Heat';
-import { Client, types, auth} from 'cassandra-driver';
+import cassandra from 'cassandra-driver';
+//import { Client, types, auth} from 'cassandra-driver';
+
 const fs = require('fs');
 
 import logger from '../../shared/Logger';
@@ -10,9 +12,8 @@ var debug = process.env.DEBUG === 'true' ? true : false;
 
 // import { connect } from 'http2';
 
-
 const CONTACTPOINT = process.env.CONTACTPOINT !== undefined ? process.env.CONTACTPOINT : 'localhost'
-const CONTACTPOINT_PORT = process.env.CONTACTPOINT_PORT 
+const CONTACTPOINT_PORT = process.env.CONTACTPOINT_PORT !== undefined ? parseInt(process.env.CONTACTPOINT_PORT) : undefined
 const CONTACTNAME = CONTACTPOINT_PORT !== undefined ? CONTACTPOINT + ":" + CONTACTPOINT_PORT : CONTACTPOINT
 const CASSANDRA_USER = process.env.CASSANDRA_USER !== undefined ? process.env.CASSANDRA_USER : 'localhost'
 const CASSANDRA_PASSWORD = process.env.CASSANDRA_PASSWORD !== undefined ? process.env.CASSANDRA_PASSWORD : 'localhost'
@@ -22,14 +23,14 @@ const useroptions = {
     password: CASSANDRA_PASSWORD
 }
 const connectoptions = {
-    contactPoints: [CONTACTPOINT],
+    contactPoints: [CONTACTNAME],
     localDataCenter: process.env.LOCALDATACENTER,
     keyspace: process.env.KEYSPACE,
     credentials: useroptions
 }
 
 const sslconnect = {
-    contactPoints: [CONTACTPOINT],
+    contactPoints: [CONTACTNAME],
     localDataCenter: process.env.LOCALDATACENTER,
     keyspace: process.env.KEYSPACE,
     credentials: useroptions,
@@ -38,31 +39,31 @@ const sslconnect = {
     }
 }
 
-const auth2 = new auth.PlainTextAuthProvider(CASSANDRA_USER, CASSANDRA_PASSWORD);
+const auth = new cassandra.auth.PlainTextAuthProvider(CASSANDRA_USER, CASSANDRA_PASSWORD);
 
 const sslOptions1 = {
-         ca: [
-                    fs.readFileSync('ssl/sf-class2-root.crt', 'utf-8')],      
-                    host: CONTACTPOINT,
-                    rejectUnauthorized: true
-        };
+    ca: [
+        fs.readFileSync('ssl/sf-class2-root.crt', 'utf-8')],
+    host: CONTACTPOINT,
+    rejectUnauthorized: true
+};
 
 
 const awsconnect = {
-                   contactPoints: [CONTACTPOINT],
-                   localDataCenter: process.env.LOCALDATACENTER,
-                   authProvider: auth,
-                   sslOptions: sslOptions1,
-                   protocolOptions: { port: CONTACTPOINT_PORT }
+    contactPoints: [CONTACTPOINT],
+    localDataCenter: process.env.LOCALDATACENTER,
+    authProvider: auth,
+    sslOptions: sslOptions1,
+    protocolOptions: { port: CONTACTPOINT_PORT }
 };
 
 const conn = process.env.SSLCONNECT === 'true' ? sslconnect : process.env.SSLCONNECT === 'aws' ? awsconnect : connectoptions
-
-
 //const conn = process.env.SSLCONNECT === 'true' ? sslconnect : connectoptions
 logger.info(JSON.stringify(conn))
 
-const client = new Client(conn);
+const client = new cassandra.Client(conn);
+
+//const client = new Client(conn);
 
 const wkid = 1;
 
@@ -160,7 +161,7 @@ class HeatDao implements IHeatDao {
         })
     }
 
-    private async getLastID(): Promise<types.Uuid> {
+    private async getLastID(): Promise<cassandra.types.Uuid> {
         const params = [wkid]
         return new Promise((resolve, reject) => {
             client.execute(selectlastheatid, params, { prepare: true })
