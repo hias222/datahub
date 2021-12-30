@@ -7,6 +7,7 @@ try {
     fs.removeSync('./dist/');
     // Copy front-end files
     fs.copySync('./env', './dist/env');
+    fs.copySync('./ssl', './dist/ssl');
     fs.copySync('./package-dist.json', './dist/package.json');
     // Transpile the typescript files
     const proc = childProcess.exec('tsc --build tsconfig.prod.json');
